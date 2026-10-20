@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in the SDK behaves incorrectly
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: SDK version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: Android API level or JVM version, plus Kotlin version
+      placeholder: "Android 14 (API 34), Kotlin 2.4.21"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the exception type and message. Never paste API tokens or secret values.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      render: kotlin
+  - type: input
+    id: request-id
+    attributes:
+      label: request_id
+      description: From the exception message, if the API returned one. It lets us find the request in our logs.

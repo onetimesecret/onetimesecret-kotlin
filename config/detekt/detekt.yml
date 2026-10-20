@@ -1,0 +1,50 @@
+# detekt configuration. Rules not listed here use detekt's defaults
+# (buildUponDefaultConfig = true in build.gradle.kts).
+
+build:
+  maxIssues: 0
+
+complexity:
+  LongParameterList:
+    # Resource methods mirror the API's request parameters; named/default
+    # arguments keep call sites readable.
+    functionThreshold: 8
+    constructorThreshold: 10
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    thresholdInClasses: 20
+    thresholdInFiles: 20
+    ignorePrivate: true
+
+style:
+  ThrowsCount:
+    # Validation functions throw once per rule they check.
+    max: 4
+    excludeGuardClauses: true
+  MaxLineLength:
+    maxLineLength: 120
+  ReturnCount:
+    max: 4
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreEnums: true
+    ignoreNumbers: ["-1", "0", "1", "2"]
+  UnusedPrivateMember:
+    active: true
+  ForbiddenComment:
+    # TODO/FIXME are allowed in source; track in issues when they matter.
+    active: false
+
+naming:
+  FunctionNaming:
+    # Allow backtick-quoted test names such as `reveal returns the value`.
+    ignoreAnnotated: ["Test", "ParameterizedTest"]
+
+exceptions:
+  TooGenericExceptionCaught:
+    # Transport wrapping deliberately catches IOException subclasses only;
+    # the few broad catches are annotated inline.
+    active: true
+  SwallowedException:
+    ignoredExceptionTypes: ["CancellationException"]

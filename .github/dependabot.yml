@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      kotlin:
+        patterns: ["org.jetbrains.kotlin*"]
+      kotlinx:
+        patterns: ["org.jetbrains.kotlinx*"]
+      quality-tools:
+        patterns: ["com.diffplug.spotless*", "io.gitlab.arturbosch.detekt*", "com.pinterest.ktlint*", "org.jetbrains.dokka*"]
+    labels: ["dependencies"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: ["dependencies", "ci"]

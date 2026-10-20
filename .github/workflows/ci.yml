@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Daily at 06:00 UTC: catches API drift via the live tests and
+    # dependency breakage via a fresh resolution.
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+jobs:
+  check:
+    name: Build & test (JDK ${{ matrix.jdk }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 17 is the toolchain the library is built with; 21 is the current LTS.
+        jdk: ["17", "21"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          # Only the default branch writes the cache; PRs read it.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Build, lint, API check, test
+        run: ./gradlew build --stacktrace
+
+      - name: Upload test and analysis reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-jdk${{ matrix.jdk }}
+          path: |
+            onetimesecret-kotlin/build/reports/
+            build/reports/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  docs:
+    name: API docs (Dokka)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Generate
+        run: ./gradlew :onetimesecret-kotlin:dokkaGenerate
+
+      - name: Upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dokka-html
+          path: onetimesecret-kotlin/build/dokka/html/
+          retention-days: 7
+
+  live:
+    name: Live API tests
+    runs-on: ubuntu-latest
+    # Only on a schedule or when triggered manually. Never on push/PR, since
+    # these tests hit an external production service over the network.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    env:
+      ONETIME_LIVE: "1"
+      ONETIME_BASE_URL: ${{ vars.ONETIME_BASE_URL || 'https://eu.onetimesecret.com' }}
+      ONETIME_CUSTOMER_EXTID: ${{ secrets.ONETIME_CUSTOMER_EXTID }}
+      ONETIME_API_TOKEN: ${{ secrets.ONETIME_API_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Run live tests
+        run: ./gradlew :onetimesecret-kotlin:test --tests 'com.onetimesecret.sdk.LiveApiTest' --rerun-tasks

@@ -1,0 +1,92 @@
+name: Release
+
+# Publishes com.onetimesecret:onetimesecret-kotlin to Maven Central from a
+# v* tag. The version comes from gradle.properties (VERSION_NAME); the tag
+# must match it exactly, and the full check suite must pass first.
+#
+# One-time setup, required secrets and the release procedure are documented
+# in docs/releasing.md.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+jobs:
+  publish:
+    name: Publish to Maven Central
+    runs-on: ubuntu-latest
+    environment:
+      name: maven-central
+      url: https://central.sonatype.com/artifact/com.onetimesecret/onetimesecret-kotlin
+    permissions:
+      contents: write # create the GitHub release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify the tag matches VERSION_NAME
+        run: |
+          version="$(grep '^VERSION_NAME=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match VERSION_NAME=$version in gradle.properties" >&2
+            exit 1
+          fi
+          case "$version" in
+            *-SNAPSHOT) echo "::error::Refusing to release a -SNAPSHOT version from a tag" >&2; exit 1 ;;
+          esac
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [$version]' section" >&2
+            exit 1
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Build and check
+        run: ./gradlew build --stacktrace
+
+      - name: Publish
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew publishToMavenCentral --no-configuration-cache --stacktrace
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > release-notes.md
+          echo "" >> release-notes.md
+          echo "Maven Central: https://central.sonatype.com/artifact/com.onetimesecret/onetimesecret-kotlin/$version" >> release-notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag \
+            onetimesecret-kotlin/build/libs/*.jar

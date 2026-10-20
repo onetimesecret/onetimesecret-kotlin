@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.jar binary
+*.png binary
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+# Generated API dump: reviewed in PRs but not hand-edited.
+*.api linguist-generated=true
