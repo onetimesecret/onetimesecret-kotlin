@@ -69,5 +69,6 @@ Maintainers only; see [docs/releasing.md](docs/releasing.md).
 
 ## Code of conduct
 
-Be kind, assume good faith, keep discussions on the work. Report problems to
-the maintainers at <security@onetimesecret.com>.
+Be kind, assume good faith, keep discussions on the work. See
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md); report problems to the maintainers
+at <security@onetimesecret.com>.
