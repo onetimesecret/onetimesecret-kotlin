@@ -15,6 +15,7 @@ import com.onetimesecret.sdk.model.RevealedSecret
 import com.onetimesecret.sdk.model.Secret
 import com.onetimesecret.sdk.model.SecretState
 import com.onetimesecret.sdk.model.SecretStatus
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
@@ -129,10 +130,16 @@ public class Secrets internal constructor(
             )
         val created = toConcealResult(envelope.record)
         if (!claimValue) return created
+        // Nothing from a failed claim may reach the caller verbatim: a parser
+        // message or raw body on this path can contain the generated value.
         return try {
             created.withValue(claimGeneratedValue(guest, created.receipt.identifier))
         } catch (e: OnetimeSecretException) {
-            created.withClaimFailure(e)
+            created.withClaimFailure(GeneratedValueClaimException.of(e))
+        } catch (e: SerializationException) {
+            created.withClaimFailure(GeneratedValueClaimException.of(e))
+        } catch (e: IllegalArgumentException) {
+            created.withClaimFailure(GeneratedValueClaimException.of(e))
         }
     }
 
@@ -255,7 +262,7 @@ public class Secrets internal constructor(
     private fun ConcealResult.withValue(value: String?): ConcealResult =
         ConcealResult(receipt, secret, shareDomain, secretUrl, receiptUrl, value = value)
 
-    private fun ConcealResult.withClaimFailure(failure: OnetimeSecretException): ConcealResult =
+    private fun ConcealResult.withClaimFailure(failure: GeneratedValueClaimException): ConcealResult =
         ConcealResult(receipt, secret, shareDomain, secretUrl, receiptUrl, claimFailure = failure)
 
     private fun route(

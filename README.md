@@ -197,9 +197,11 @@ view of its receipt while the receipt is new and within a short window after
 creation (60 seconds by default), so the SDK fetches the receipt right after
 creating it and hands you the value; your own later `receipts.show` will not
 see it again. If that follow-up request fails the secret still exists and the
-links are valid: `value` is `null` and the cause is in `claimFailure` rather
-than thrown. Pass `claimValue = false` to skip the fetch and claim the value
-yourself with `receipts.show`.
+links are valid: `value` is `null` and `claimFailure` holds a
+`GeneratedValueClaimException` (failure class, status and `error_type` only,
+never a response body) rather than anything being thrown. Pass
+`claimValue = false` to skip the fetch and claim the value yourself with
+`receipts.show`.
 
 ### `client.receipts`
 
@@ -269,6 +271,7 @@ try {
 | `RateLimitException`         | 429 / `LimitExceeded` (see `retryAfterSeconds`)                                       |
 | `ServerException`            | 5xx (GETs are retried on 502/503/504 first)                                           |
 | `SecretNotRevealedException` | the reveal succeeded but another request consumed the secret first                    |
+| `GeneratedValueClaimException` | never thrown; `ConcealResult.claimFailure` when `generate` could not claim the value |
 
 A wrong passphrase on `reveal` or `burn` arrives as a `BadRequestException`
 whose `errorMessage` is localized by the service.

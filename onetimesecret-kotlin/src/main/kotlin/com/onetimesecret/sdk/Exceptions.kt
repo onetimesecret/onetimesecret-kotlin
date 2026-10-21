@@ -63,6 +63,42 @@ public class SecretNotRevealedException(
     )
 
 /**
+ * The secret was generated and its links are valid, but the follow-up
+ * request that claims the generated value failed. Delivered in
+ * `ConcealResult.claimFailure`, never thrown.
+ *
+ * Deliberately carries nothing from the underlying failure except its class
+ * name, the HTTP status and the API's `error_type`: no message, body or cause,
+ * because that path can contain the generated value.
+ *
+ * @property failure Simple class name of the underlying failure, e.g. `"ServerException"`.
+ * @property statusCode HTTP status code, when the service answered.
+ * @property errorType The API's `error_type`, when the service sent one.
+ */
+public class GeneratedValueClaimException internal constructor(
+    public val failure: String,
+    public val statusCode: Int?,
+    public val errorType: String?,
+) : OnetimeSecretException(
+        buildString {
+            append("Claiming the generated value failed: ").append(failure)
+            if (statusCode !=
+                null
+            ) {
+                append(" (HTTP ").append(statusCode).append(errorType?.let { " $it" } ?: "").append(')')
+            }
+        },
+    ) {
+    internal companion object {
+        fun of(e: Throwable): GeneratedValueClaimException =
+            when (e) {
+                is ApiException -> GeneratedValueClaimException(e.javaClass.simpleName, e.statusCode, e.errorType)
+                else -> GeneratedValueClaimException(e.javaClass.simpleName, null, null)
+            }
+    }
+}
+
+/**
  * The service answered with an HTTP 4xx or 5xx status.
  *
  * Fields follow the API's error contract (ADR-013): every error body carries a

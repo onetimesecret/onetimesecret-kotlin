@@ -11,10 +11,11 @@ All notable changes to this project are documented here. The format follows
 - `secrets.generate` now returns the generated value in `ConcealResult.value`.
   The service never includes it in the create response; it discloses it once,
   on the first view of the receipt, so `generate` fetches the receipt right
-  after creation. A failed fetch leaves `value` `null` with the cause in
-  `ConcealResult.claimFailure` instead of failing the call. Pass
-  `claimValue = false` to claim it yourself. `Secret.value` on a generate
-  result is always `null`.
+  after creation. A failed fetch leaves `value` `null` with a
+  `GeneratedValueClaimException` in `ConcealResult.claimFailure` (failure
+  class, status and `error_type` only, never a response body) instead of
+  failing the call. Pass `claimValue = false` to claim it yourself.
+  `Secret.value` on a generate result is always `null`.
 
 ## [0.1.0] - 2026-10-20
 

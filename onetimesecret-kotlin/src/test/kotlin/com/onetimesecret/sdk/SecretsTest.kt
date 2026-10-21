@@ -144,8 +144,38 @@ class SecretsTest : MockServerTest() {
             assertEquals("rcptgen1234567890", result.receipt.identifier)
             assertEquals(server.url("/secret/secgen1234567890").toString(), result.secretUrl)
             assertNull(result.value)
-            val failure = assertIs<ServerException>(result.claimFailure)
+            val failure = assertIs<GeneratedValueClaimException>(result.claimFailure)
+            assertEquals("ServerException", failure.failure)
             assertEquals(500, failure.statusCode)
+            assertEquals("ServerError", failure.errorType)
+            assertNull(failure.cause)
+            assertFalse(result.toString().contains("boom"), "the server message is not echoed")
+        }
+
+    @Test
+    fun `a malformed receipt body never leaks into the claim failure`() =
+        runTest {
+            // Malformed in `details` (decoded on the claim path) and malformed at
+            // the envelope (decoded by the transport); both carry the value.
+            val bodies =
+                listOf(
+                    """{ "record": { "identifier": "r" }, "details": { "secret_value": ["LEAKME"] } }""",
+                    """{ "record": { "identifier": "r" }, "details": "secret_value=LEAKME" }""",
+                )
+            for (body in bodies) {
+                enqueueJson(Fixtures.generateResponse)
+                enqueueJson(body)
+
+                val result = client.secrets.generate()
+
+                assertEquals("rcptgen1234567890", result.receipt.identifier)
+                assertNull(result.value)
+                val failure = assertIs<GeneratedValueClaimException>(result.claimFailure)
+                assertNull(failure.cause)
+                for (text in listOf(failure.message!!, failure.toString(), result.toString())) {
+                    assertFalse(text.contains("LEAKME"), text)
+                }
+            }
         }
 
     @Test

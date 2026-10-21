@@ -1,6 +1,6 @@
 package com.onetimesecret.sdk.model
 
-import com.onetimesecret.sdk.OnetimeSecretException
+import com.onetimesecret.sdk.GeneratedValueClaimException
 import com.onetimesecret.sdk.internal.LenientBooleanSerializer
 import com.onetimesecret.sdk.internal.LenientLongSerializer
 import com.onetimesecret.sdk.internal.StringListSerializer
@@ -119,7 +119,8 @@ public data class Receipt(
  *   the claim failed (see [claimFailure]).
  * @property claimFailure Why [value] is `null` although it was requested: the
  *   secret was created and the links are valid, but the follow-up receipt
- *   request failed. `null` when nothing went wrong.
+ *   request failed. Carries only the failure's class, status and `error_type`,
+ *   never a response body. `null` when nothing went wrong.
  */
 public class ConcealResult internal constructor(
     public val receipt: Receipt,
@@ -128,10 +129,11 @@ public class ConcealResult internal constructor(
     public val secretUrl: String,
     public val receiptUrl: String,
     public val value: String? = null,
-    public val claimFailure: OnetimeSecretException? = null,
+    public val claimFailure: GeneratedValueClaimException? = null,
 ) {
-    /** Redacts [value]. */
+    /** Redacts [value]; names only the class and status of [claimFailure]. */
     override fun toString(): String =
         "ConcealResult(receipt=${receipt.identifier}, secret=${secret.identifier}, secretUrl=$secretUrl, " +
-            "value=${if (value == null) "null" else "****"}, claimFailure=$claimFailure)"
+            "value=${if (value == null) "null" else "****"}, " +
+            "claimFailure=${claimFailure?.let { "${it.failure}/${it.statusCode}" }})"
 }
