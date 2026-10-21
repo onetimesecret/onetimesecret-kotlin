@@ -157,7 +157,7 @@ mavenPublishing {
         }
         scm {
             url.set("https://github.com/onetimesecret/onetimesecret-kotlin")
-            connection.set("scm:git:git://github.com/onetimesecret/onetimesecret-kotlin.git")
+            connection.set("scm:git:https://github.com/onetimesecret/onetimesecret-kotlin.git")
             developerConnection.set("scm:git:ssh://git@github.com/onetimesecret/onetimesecret-kotlin.git")
         }
         issueManagement {
