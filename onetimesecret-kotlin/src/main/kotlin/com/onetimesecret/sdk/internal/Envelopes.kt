@@ -36,6 +36,16 @@ internal class RevealDetails(
     @SerialName("is_owner") @Serializable(with = LenientBooleanSerializer::class) val isOwner: Boolean? = null,
 )
 
+/*
+ * `GET /receipt/{id}` discloses a generated secret's value exactly once, in
+ * `details.secret_value` on the first view while the receipt is still new.
+ * It is never part of the record.
+ */
+@Serializable
+internal class ReceiptDetails(
+    @SerialName("secret_value") val secretValue: String? = null,
+)
+
 @Serializable
 internal class StatusDetails(
     @SerialName("current_expiration")

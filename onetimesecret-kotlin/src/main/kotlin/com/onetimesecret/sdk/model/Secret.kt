@@ -19,7 +19,8 @@ import kotlinx.serialization.Serializable
  * @property createdAt Creation time (epoch seconds).
  * @property updatedAt Last update time (epoch seconds).
  * @property hasPassphrase Whether a passphrase is required to reveal.
- * @property value The secret content. Only present on a successful reveal.
+ * @property value The secret content. Only present on a successful reveal;
+ *   a generated value is delivered through `ConcealResult.value` instead.
  * @property displayType How [value] should be rendered.
  * @property ttlSeconds The remaining time-to-live reported by the service, in seconds.
  * @property lifespan The original lifespan as a human-readable string (e.g. `"7 days"`).

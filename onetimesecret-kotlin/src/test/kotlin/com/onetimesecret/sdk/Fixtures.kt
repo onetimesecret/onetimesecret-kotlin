@@ -56,7 +56,7 @@ object Fixtures {
 
     // A generate response as captured from a current server: numeric scalars
     // throughout, a `metadata` alias of the receipt, `kind: "generate"`, and
-    // the generated value in `secret_value`.
+    // no value anywhere. That is disclosed by the first receipt view instead.
     val generateResponse =
         """
         {
@@ -97,7 +97,6 @@ object Fixtures {
               "has_passphrase": false,
               "verification": false,
               "display_type": "text",
-              "secret_value": "Xk9#mP2vQ7wL",
               "created": 1792596963.009391,
               "updated": 1792596963.0101912,
               "is_previewed": false,
@@ -106,6 +105,33 @@ object Fixtures {
             "share_domain": null
           },
           "details": { "kind": "generate", "recipient": [], "recipient_safe": [] }
+        }
+        """.trimIndent()
+
+    /** First view of a fresh generated receipt: the value is in `details`, never in `record`. */
+    fun generatedReceiptResponse(value: String?): String =
+        """
+        {
+          "record": {
+            "identifier": "rcptgen1234567890",
+            "key": "rcptgen1234567890",
+            "state": "new",
+            "secret_identifier": "secgen1234567890",
+            "secret_ttl": 300,
+            "created": 1792596963.0864809,
+            "updated": 1792596963.086494,
+            "has_passphrase": false,
+            "kind": "generate"
+          },
+          "details": {
+            "type": "record",
+            "display_lines": 4,
+            "no_cache": true,
+            "view_count": 0,
+            "can_decrypt": true,
+            "secret_value": ${if (value == null) "null" else "\"$value\""},
+            "show_secret": true
+          }
         }
         """.trimIndent()
 

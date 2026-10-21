@@ -1,5 +1,6 @@
 package com.onetimesecret.sdk.model
 
+import com.onetimesecret.sdk.OnetimeSecretException
 import com.onetimesecret.sdk.internal.LenientBooleanSerializer
 import com.onetimesecret.sdk.internal.LenientLongSerializer
 import com.onetimesecret.sdk.internal.StringListSerializer
@@ -107,11 +108,18 @@ public data class Receipt(
  * record (give the link to the recipient), and ready-made URLs.
  *
  * @property receipt The creator-facing record.
- * @property secret The recipient-facing record. For `generate`, [Secret.value]
- *   carries the generated value so you can show it to the creator once.
+ * @property secret The recipient-facing record. Never carries the value.
  * @property shareDomain The custom domain the share link uses, if one was requested.
  * @property secretUrl The link to give the recipient.
  * @property receiptUrl The link to the creator's receipt page.
+ * @property value For `generate`, the generated value, claimed from the
+ *   receipt right after creation so you can show it to the creator. The
+ *   service discloses it exactly once, so this is the only copy. `null` for
+ *   `conceal`, when `generate` was called with `claimValue = false`, or when
+ *   the claim failed (see [claimFailure]).
+ * @property claimFailure Why [value] is `null` although it was requested: the
+ *   secret was created and the links are valid, but the follow-up receipt
+ *   request failed. `null` when nothing went wrong.
  */
 public class ConcealResult internal constructor(
     public val receipt: Receipt,
@@ -119,7 +127,11 @@ public class ConcealResult internal constructor(
     public val shareDomain: String?,
     public val secretUrl: String,
     public val receiptUrl: String,
+    public val value: String? = null,
+    public val claimFailure: OnetimeSecretException? = null,
 ) {
+    /** Redacts [value]. */
     override fun toString(): String =
-        "ConcealResult(receipt=${receipt.identifier}, secret=${secret.identifier}, secretUrl=$secretUrl)"
+        "ConcealResult(receipt=${receipt.identifier}, secret=${secret.identifier}, secretUrl=$secretUrl, " +
+            "value=${if (value == null) "null" else "****"}, claimFailure=$claimFailure)"
 }

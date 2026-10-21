@@ -3,6 +3,7 @@ package com.onetimesecret.sdk
 import com.onetimesecret.sdk.internal.ConcealRecord
 import com.onetimesecret.sdk.internal.HttpTransport
 import com.onetimesecret.sdk.internal.Identifiers
+import com.onetimesecret.sdk.internal.ReceiptDetails
 import com.onetimesecret.sdk.internal.RecordEnvelope
 import com.onetimesecret.sdk.internal.RecordsEnvelope
 import com.onetimesecret.sdk.internal.RevealDetails
@@ -81,12 +82,23 @@ public class Secrets internal constructor(
 
     /**
      * Have the service generate a random secret value (for example a
-     * password). The generated value is returned once, in
-     * [ConcealResult.secret]'s [Secret.value], so you can show it to the
-     * creator; the recipient gets it through the link as usual.
+     * password). The recipient gets it through the link as usual; the creator
+     * can see it once, in [ConcealResult.value].
+     *
+     * The create response never contains the value. The service discloses it
+     * exactly once, on the first view of the receipt while it is still new and
+     * within a short window after creation (60 seconds by default). With
+     * [claimValue] `true` this method fetches the receipt immediately and
+     * returns the value; after that, nobody but the recipient can see it. If
+     * that follow-up request fails the secret still exists and the links are
+     * valid, so the result is returned with [ConcealResult.value] `null` and
+     * the cause in [ConcealResult.claimFailure] rather than thrown.
      *
      * @param length Length of the generated value. `null` uses the service default.
      * @param characterSets Which character classes to draw from. `null` uses the service default.
+     * @param claimValue Fetch the receipt once to obtain the value. Pass
+     *   `false` to leave the one-time disclosure for your own first
+     *   `receipts.show` call instead.
      * @see conceal for the remaining parameters.
      */
     public suspend fun generate(
@@ -98,6 +110,7 @@ public class Secrets internal constructor(
         length: Int? = null,
         characterSets: CharacterSets? = null,
         guest: Boolean = false,
+        claimValue: Boolean = true,
     ): ConcealResult {
         require(length == null || length > 0) { "length must be positive" }
         val body =
@@ -114,7 +127,13 @@ public class Secrets internal constructor(
                 body = body,
                 deserializer = RecordEnvelope.serializer(ConcealRecord.serializer()),
             )
-        return toConcealResult(envelope.record)
+        val created = toConcealResult(envelope.record)
+        if (!claimValue) return created
+        return try {
+            created.withValue(claimGeneratedValue(guest, created.receipt.identifier))
+        } catch (e: OnetimeSecretException) {
+            created.withClaimFailure(e)
+        }
     }
 
     /**
@@ -217,6 +236,27 @@ public class Secrets internal constructor(
     }
 
     // -- helpers ------------------------------------------------------------
+
+    /** First view of a fresh receipt: the one place the service shows a generated value. */
+    private suspend fun claimGeneratedValue(
+        guest: Boolean,
+        receiptIdentifier: String,
+    ): String? {
+        val envelope =
+            transport.get(
+                route(guest, "receipt", receiptIdentifier),
+                deserializer = RecordEnvelope.serializer(JsonObject.serializer()),
+            )
+        return envelope.details
+            ?.let { transport.json.decodeFromJsonElement(ReceiptDetails.serializer(), it) }
+            ?.secretValue
+    }
+
+    private fun ConcealResult.withValue(value: String?): ConcealResult =
+        ConcealResult(receipt, secret, shareDomain, secretUrl, receiptUrl, value = value)
+
+    private fun ConcealResult.withClaimFailure(failure: OnetimeSecretException): ConcealResult =
+        ConcealResult(receipt, secret, shareDomain, secretUrl, receiptUrl, claimFailure = failure)
 
     private fun route(
         guest: Boolean,

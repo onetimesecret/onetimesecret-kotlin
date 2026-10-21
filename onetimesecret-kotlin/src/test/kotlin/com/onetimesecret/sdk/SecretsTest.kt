@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.hours
@@ -86,11 +87,12 @@ class SecretsTest : MockServerTest() {
     @Test
     fun `generate sends length and character sets`() =
         runTest {
-            enqueueJson(Fixtures.concealResponse)
+            enqueueJson(Fixtures.generateResponse)
 
             client.secrets.generate(
                 length = 24,
                 characterSets = CharacterSets(symbols = false, excludeAmbiguous = true),
+                claimValue = false,
             )
 
             val request = takeRequest()
@@ -104,21 +106,70 @@ class SecretsTest : MockServerTest() {
         }
 
     @Test
-    fun `generate returns the generated value once and a receipt of kind GENERATE`() =
+    fun `generate claims the value from the first receipt view and returns a GENERATE receipt`() =
         runTest {
             enqueueJson(Fixtures.generateResponse)
+            enqueueJson(Fixtures.generatedReceiptResponse("Xk9#mP2vQ7wL"))
 
-            val result = client.secrets.generate(length = 12)
+            val result = client.secrets.generate(length = 12, guest = true)
 
-            assertEquals("""{"secret":{"length":12}}""", takeRequest().bodyString())
+            val create = takeRequest()
+            assertEquals("/api/v2/guest/secret/generate", create.url.encodedPath)
+            assertEquals("""{"secret":{"length":12}}""", create.bodyString())
+            val claim = takeRequest()
+            assertEquals("GET", claim.method)
+            assertEquals("/api/v2/guest/receipt/rcptgen1234567890", claim.url.encodedPath, "same guest flag")
+
+            assertEquals("Xk9#mP2vQ7wL", result.value)
+            assertNull(result.claimFailure)
+            assertNull(result.secret.value, "the secret record never carries the value")
             assertEquals(SecretKind.GENERATE, result.receipt.kind)
-            assertEquals("Xk9#mP2vQ7wL", result.secret.value)
             assertEquals(SecretState.NEW, result.secret.state)
             assertEquals(false, result.secret.hasPassphrase)
             assertEquals(300L, result.secret.ttlSeconds, "numeric scalars decode too")
             assertEquals(1792596963L, result.receipt.createdAt, "fractional epoch truncates")
             assertEquals(server.url("/secret/secgen1234567890").toString(), result.secretUrl)
-            assertFalse(result.secret.toString().contains("Xk9#mP2vQ7wL"), "toString must redact the value")
+            assertFalse(result.toString().contains("Xk9#mP2vQ7wL"), "toString must redact the value")
+        }
+
+    @Test
+    fun `generate still succeeds when the claim fails and reports why`() =
+        runTest {
+            enqueueJson(Fixtures.generateResponse)
+            enqueueJson(Fixtures.error("ServerError", "boom"), code = 500)
+
+            val result = client.secrets.generate()
+
+            assertEquals(2, server.requestCount)
+            assertEquals("rcptgen1234567890", result.receipt.identifier)
+            assertEquals(server.url("/secret/secgen1234567890").toString(), result.secretUrl)
+            assertNull(result.value)
+            val failure = assertIs<ServerException>(result.claimFailure)
+            assertEquals(500, failure.statusCode)
+        }
+
+    @Test
+    fun `generate without the value when the window has passed`() =
+        runTest {
+            enqueueJson(Fixtures.generateResponse)
+            enqueueJson(Fixtures.generatedReceiptResponse(null))
+
+            val result = client.secrets.generate()
+
+            assertNull(result.value)
+            assertNull(result.claimFailure)
+        }
+
+    @Test
+    fun `generate with claimValue false makes a single request`() =
+        runTest {
+            enqueueJson(Fixtures.generateResponse)
+
+            val result = client.secrets.generate(claimValue = false)
+
+            assertEquals(1, server.requestCount)
+            assertNull(result.value)
+            assertNull(result.claimFailure)
         }
 
     @Test
