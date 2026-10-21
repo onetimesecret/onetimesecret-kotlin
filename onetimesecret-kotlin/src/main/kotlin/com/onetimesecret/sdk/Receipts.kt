@@ -98,8 +98,8 @@ public class Receipts internal constructor(
         guest: Boolean,
         vararg segments: String,
     ): List<String> = if (guest) listOf("guest", *segments) else segments.toList()
-
-    private companion object {
-        const val MEMO_MAX_LENGTH = 500
-    }
 }
+
+// A `const val` in a private companion still becomes a public static field in
+// bytecode, so the limit lives at file level to keep it out of the API surface.
+private const val MEMO_MAX_LENGTH = 500
