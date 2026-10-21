@@ -60,7 +60,7 @@ created.receipt.identifier   // keep this to check on it or burn it
 
 // Generate a random secret server-side
 val generated = client.secrets.generate(length = 24, ttl = 24.hours)
-generated.secret.value       // the generated value, shown to you once
+generated.value              // the generated value, disclosed to you once (see below)
 
 // Reveal (consume) a secret -- one-time only
 val revealed = client.secrets.reveal(created.secretUrl, passphrase = "pw12")
@@ -182,7 +182,7 @@ When a deployment requires an account for an operation, the SDK throws
 | Method                                                                                   | Returns          |
 |------------------------------------------------------------------------------------------|------------------|
 | `conceal(secret, ttl, passphrase, recipient, shareDomain, displayType, guest)`           | `ConcealResult`  |
-| `generate(ttl, passphrase, recipient, shareDomain, displayType, length, characterSets, guest)` | `ConcealResult` |
+| `generate(ttl, passphrase, recipient, shareDomain, displayType, length, characterSets, guest, claimValue)` | `ConcealResult` |
 | `reveal(keyOrUrl, passphrase, guest)`                                                    | `RevealedSecret` |
 | `show(keyOrUrl, guest)`                                                                  | `Secret`         |
 | `status(keyOrUrl)`                                                                       | `SecretStatus`   |
@@ -190,6 +190,16 @@ When a deployment requires an account for an operation, the SDK throws
 
 `reveal`, `show` and `status` accept either a bare identifier or the full link
 the recipient was given.
+
+`generate` returns the value in `ConcealResult.value`, not in the secret
+record. The service discloses a generated value exactly once, on the first
+view of its receipt while the receipt is new and within a short window after
+creation (60 seconds by default), so the SDK fetches the receipt right after
+creating it and hands you the value; your own later `receipts.show` will not
+see it again. If that follow-up request fails the secret still exists and the
+links are valid: `value` is `null` and the cause is in `claimFailure` rather
+than thrown. Pass `claimValue = false` to skip the fetch and claim the value
+yourself with `receipts.show`.
 
 ### `client.receipts`
 
