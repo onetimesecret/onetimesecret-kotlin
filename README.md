@@ -86,6 +86,20 @@ class ShareViewModel(private val client: OnetimeSecretClient) : ViewModel() {
 Create one client per base URL and account and share it (singleton, DI graph,
 `Application` field). It is immutable and thread-safe.
 
+### Runnable example
+
+[`examples/roundtrip`](examples/roundtrip/src/main/kotlin/com/onetimesecret/examples/RoundTrip.kt)
+conceals a secret, reads its receipt, reveals the secret and confirms the
+receipt's state changed. It builds against the SDK source in this repository:
+
+```sh
+ONETIME_BASE_URL=https://eu.onetimesecret.com ./gradlew :examples:roundtrip:run
+```
+
+Without `ONETIME_CUSTOMER_EXTID` and `ONETIME_API_TOKEN` it runs anonymously
+on the guest endpoints; set them to run as your account. Point
+`ONETIME_BASE_URL` at a self-hosted deployment to exercise that instead.
+
 ### Authentication
 
 Authentication uses HTTP Basic, where the **customer extid** is the username
@@ -270,6 +284,7 @@ over the status code when both are present.
 ./gradlew spotlessApply  # fix formatting
 ./gradlew apiDump        # after an intentional public API change
 ./gradlew dokkaGenerate  # API docs -> onetimesecret-kotlin/build/dokka/html
+./gradlew :examples:roundtrip:run  # end-to-end example (see above)
 ```
 
 Unit tests run against an in-process [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver)

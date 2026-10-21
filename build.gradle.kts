@@ -42,7 +42,13 @@ configure<DetektExtension> {
     buildUponDefaultConfig = true
     allRules = false
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-    source.setFrom(files("onetimesecret-kotlin/src/main/kotlin", "onetimesecret-kotlin/src/test/kotlin"))
+    source.setFrom(
+        files(
+            "onetimesecret-kotlin/src/main/kotlin",
+            "onetimesecret-kotlin/src/test/kotlin",
+            "examples/roundtrip/src/main/kotlin",
+        ),
+    )
     parallel = true
 }
 
@@ -61,6 +67,7 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
 // `apiCheck` (part of `check`) fails CI on an unreviewed change.
 // ---------------------------------------------------------------------------
 apiValidation {
-    ignoredProjects += listOf(rootProject.name)
+    // The root has no sources; the example is an application, not an API.
+    ignoredProjects += listOf(rootProject.name, "roundtrip")
     ignoredPackages += listOf("com.onetimesecret.sdk.internal")
 }

@@ -24,3 +24,6 @@ rootProject.name = "onetimesecret-kotlin-root"
 // The published library module. The repository is `onetimesecret-kotlin`;
 // the Maven artifact is `com.onetimesecret:onetimesecret-kotlin`.
 include(":onetimesecret-kotlin")
+
+// Runnable example; built by `./gradlew build`, never published.
+include(":examples:roundtrip")

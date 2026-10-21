@@ -29,6 +29,7 @@ passes locally it passes there.
 | `./gradlew apiCheck`                 | Fail if the public API changed without `apiDump`         |
 | `./gradlew :onetimesecret-kotlin:test` | Unit tests only                                        |
 | `./gradlew dokkaGenerate`            | API docs into `onetimesecret-kotlin/build/dokka/html`    |
+| `./gradlew :examples:roundtrip:run`  | End-to-end example against `ONETIME_BASE_URL` (see README) |
 
 ## Conventions
 

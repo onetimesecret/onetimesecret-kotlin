@@ -19,6 +19,7 @@ language, not ports of one another.
 ./gradlew spotlessApply  # fix formatting (ktlint for Kotlin and .kts; trailing whitespace for md/yml/toml)
 ./gradlew apiDump        # after an intentional public API change; commit the .api diff
 ./gradlew dokkaGenerate  # API docs -> onetimesecret-kotlin/build/dokka/html
+ONETIME_BASE_URL=... ./gradlew :examples:roundtrip:run  # end-to-end example against a real server
 ```
 
 Always use the wrapper. The build needs JDK 17+ to launch Gradle; the
@@ -41,6 +42,8 @@ That is deliberate: the module name is the Maven artifactId.
   dump; never hand-edit.
 - `onetimesecret-kotlin/build/generated/.../BuildInfo.kt`: generated from
   `VERSION_NAME` in `gradle.properties` at build time.
+- `examples/roundtrip/`: runnable end-to-end example (`application`
+  subproject, built by `build`, never published, ignored by `apiCheck`).
 - `gradle/libs.versions.toml`: every dependency and plugin version.
 - `config/detekt/detekt.yml`: static analysis rules.
 
