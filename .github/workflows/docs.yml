@@ -1,0 +1,77 @@
+name: Docs
+
+# Builds the Dokka API reference and publishes it to GitHub Pages at
+# https://onetimesecret.github.io/onetimesecret-kotlin/. Runs when the
+# library sources, its module docs or the build files change on main, and
+# on demand. Pages is configured to deploy from this workflow (build type
+# "workflow"), so nothing is committed to a branch.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "onetimesecret-kotlin/src/main/**"
+      - "onetimesecret-kotlin/Module.md"
+      - "onetimesecret-kotlin/build.gradle.kts"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "gradle/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a queued one must not cancel a running one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+jobs:
+  build:
+    name: Build API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Generate
+        run: ./gradlew :onetimesecret-kotlin:dokkaGenerate
+
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: onetimesecret-kotlin/build/dokka/html/
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

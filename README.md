@@ -3,6 +3,7 @@
 [![CI](https://github.com/onetimesecret/onetimesecret-kotlin/actions/workflows/ci.yml/badge.svg)](https://github.com/onetimesecret/onetimesecret-kotlin/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.onetimesecret/onetimesecret-kotlin)](https://central.sonatype.com/artifact/com.onetimesecret/onetimesecret-kotlin)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![API reference](https://img.shields.io/badge/docs-API%20reference-blue)](https://onetimesecret.github.io/onetimesecret-kotlin/)
 
 The official Kotlin client for the [Onetime Secret](https://onetimesecret.com)
 API, for Android and the JVM. Share sensitive information through a link that
@@ -23,6 +24,8 @@ can only be viewed once.
 
 The Maven artifact is `com.onetimesecret:onetimesecret-kotlin`. The repository
 is `onetimesecret-kotlin`, one of the [Onetime Secret SDK family](https://github.com/onetimesecret).
+The API reference (Dokka) is published at
+[onetimesecret.github.io/onetimesecret-kotlin](https://onetimesecret.github.io/onetimesecret-kotlin/).
 
 ## Installation
 
@@ -286,6 +289,10 @@ over the status code when both are present.
 ./gradlew dokkaGenerate  # API docs -> onetimesecret-kotlin/build/dokka/html
 ./gradlew :examples:roundtrip:run  # end-to-end example (see above)
 ```
+
+The Docs workflow publishes the Dokka output to
+[GitHub Pages](https://onetimesecret.github.io/onetimesecret-kotlin/) on every
+push to `main` that touches the library or the build.
 
 Unit tests run against an in-process [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver)
 and need no network. The live tests in `LiveApiTest` hit a real deployment and
