@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -23,6 +24,12 @@ kotlin {
     )
 
     compilerOptions {
+        // The Kotlin floor the README promises. Pinning the language and API
+        // level keeps the emitted metadata readable by that compiler even
+        // after the Kotlin plugin is bumped; raise these and the README together.
+        languageVersion.set(KotlinVersion.KOTLIN_2_4)
+        apiVersion.set(KotlinVersion.KOTLIN_2_4)
+
         // Android-friendly bytecode. The build runs on a 17 toolchain but emits
         // class files any AGP 8.x project can consume without extra desugaring.
         jvmTarget.set(JvmTarget.JVM_11)

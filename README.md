@@ -33,7 +33,7 @@ dependencies {
 }
 ```
 
-Requirements: Kotlin 2.0+, Android 5.0+ (API 21, the OkHttp 5 floor) or
+Requirements: Kotlin 2.4+ (the `kotlinx-serialization` floor), Android 5.0+ (API 21, the OkHttp 5 floor) or
 JDK 11+. The SDK depends on `okhttp`, `kotlinx-coroutines-core` and
 `kotlinx-serialization-json`.
 
