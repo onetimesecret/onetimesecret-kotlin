@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 17 is the toolchain the library is built with; 21 is the current LTS.
+        # 17 is the toolchain the library is built with; 21 is a newer LTS.
         jdk: ["17", "21"]
     steps:
       - name: Checkout
@@ -115,3 +115,6 @@ jobs:
 
       - name: Run live tests
         run: ./gradlew :onetimesecret-kotlin:test --tests 'com.onetimesecret.sdk.LiveApiTest' --rerun-tasks
+
+      - name: Run the round-trip example
+        run: ./gradlew :examples:roundtrip:run
