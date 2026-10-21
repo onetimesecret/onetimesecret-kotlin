@@ -61,6 +61,11 @@ That is deliberate: the module name is the Maven artifactId.
   ignored. Keep both.
 - Nothing that can hold a secret value, passphrase or token may print it.
   `toString()` redacts; the library has no logging.
+- Receipts are served under `/api/v2/receipt/*`. The `/api/v2/private/*`
+  routes are deprecated aliases of the same handlers and are deliberately
+  not exposed: `Identifiers.receipt` accepts a pasted `/private/` (or
+  `/metadata/`) URL, but every request the SDK sends goes to `/receipt/`.
+  Do not add `private` routes or a flag to select them.
 - Writes (POST/PATCH) are never retried. Only GETs retry, on network errors
   and 502/503/504.
 - New server `error_type` values go in `internal/ErrorMapper.kt` with a test
