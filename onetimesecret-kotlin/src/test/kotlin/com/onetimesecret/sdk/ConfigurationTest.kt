@@ -84,13 +84,15 @@ class ConfigurationTest {
     }
 
     @Test
-    fun `negative retries are rejected`() {
-        assertFailsWith<IllegalArgumentException> {
-            OnetimeSecretConfig {
-                baseUrl = "https://ca.onetimesecret.com"
-                maxRetries = -1
+    fun `negative retries are rejected at construction`() {
+        val e =
+            assertFailsWith<ConfigurationException> {
+                OnetimeSecretConfig {
+                    baseUrl = "https://ca.onetimesecret.com"
+                    maxRetries = -1
+                }
             }
-        }
+        assertTrue(e.message!!.contains("maxRetries"))
     }
 
     @Test

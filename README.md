@@ -229,7 +229,7 @@ try {
 
 | Exception                    | When                                                                                  |
 |------------------------------|---------------------------------------------------------------------------------------|
-| `ConfigurationException`     | bad `baseUrl`, malformed customer extid, blank token (at construction)                |
+| `ConfigurationException`     | bad `baseUrl`, malformed customer extid, blank token, negative `maxRetries` (at construction) |
 | `TransportException`         | network failure or unparseable response body                                          |
 | `TimeoutException`           | connect/read/write timeout (subtype of `TransportException`)                          |
 | `ApiException`               | any HTTP 4xx/5xx not covered below                                                    |

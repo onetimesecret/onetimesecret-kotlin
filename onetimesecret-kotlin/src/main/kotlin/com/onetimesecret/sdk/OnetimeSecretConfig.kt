@@ -122,7 +122,7 @@ public class OnetimeSecretConfig private constructor(
         /** @throws ConfigurationException when the configuration is invalid. */
         public fun build(): OnetimeSecretConfig {
             val url = parseBaseUrl(baseUrl)
-            require(maxRetries >= 0) { "maxRetries must be >= 0" }
+            if (maxRetries < 0) throw ConfigurationException("maxRetries must be >= 0, was $maxRetries.")
             return OnetimeSecretConfig(
                 baseUrl = url,
                 credentials = credentials,
