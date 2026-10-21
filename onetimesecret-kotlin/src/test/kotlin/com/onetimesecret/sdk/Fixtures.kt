@@ -54,6 +54,61 @@ object Fixtures {
         }
         """.trimIndent()
 
+    // A generate response as captured from a current server: numeric scalars
+    // throughout, a `metadata` alias of the receipt, `kind: "generate"`, and
+    // the generated value in `secret_value`.
+    val generateResponse =
+        """
+        {
+          "success": true,
+          "record": {
+            "receipt": {
+              "identifier": "rcptgen1234567890",
+              "key": "rcptgen1234567890",
+              "custid": null,
+              "owner_id": null,
+              "state": "new",
+              "secret_shortid": "secgen12",
+              "secret_identifier": "secgen1234567890",
+              "secret_ttl": 300,
+              "metadata_ttl": 300,
+              "receipt_ttl": 300,
+              "lifespan": 300,
+              "share_domain": null,
+              "created": 1792596963.0864809,
+              "updated": 1792596963.086494,
+              "recipients": "",
+              "memo": null,
+              "shortid": "rcptgen1",
+              "is_previewed": false,
+              "is_revealed": false,
+              "has_passphrase": false,
+              "kind": "generate",
+              "source": "standard"
+            },
+            "metadata": { "identifier": "rcptgen1234567890", "kind": "generate" },
+            "secret": {
+              "identifier": "secgen1234567890",
+              "key": "secgen1234567890",
+              "shortid": "secgen12",
+              "state": "new",
+              "lifespan": 300,
+              "secret_ttl": 300,
+              "has_passphrase": false,
+              "verification": false,
+              "display_type": "text",
+              "secret_value": "Xk9#mP2vQ7wL",
+              "created": 1792596963.009391,
+              "updated": 1792596963.0101912,
+              "is_previewed": false,
+              "is_revealed": false
+            },
+            "share_domain": null
+          },
+          "details": { "kind": "generate", "recipient": [], "recipient_safe": [] }
+        }
+        """.trimIndent()
+
     val revealResponse =
         """
         {

@@ -2,6 +2,7 @@ package com.onetimesecret.sdk
 
 import com.onetimesecret.sdk.model.CharacterSets
 import com.onetimesecret.sdk.model.DisplayType
+import com.onetimesecret.sdk.model.SecretKind
 import com.onetimesecret.sdk.model.SecretState
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -100,6 +101,24 @@ class SecretsTest : MockServerTest() {
             assertFalse(sets["symbols"]!!.jsonPrimitive.boolean)
             assertTrue(sets["exclude_ambiguous"]!!.jsonPrimitive.boolean)
             assertNull(sets["uppercase"], "unset character set flags are omitted")
+        }
+
+    @Test
+    fun `generate returns the generated value once and a receipt of kind GENERATE`() =
+        runTest {
+            enqueueJson(Fixtures.generateResponse)
+
+            val result = client.secrets.generate(length = 12)
+
+            assertEquals("""{"secret":{"length":12}}""", takeRequest().bodyString())
+            assertEquals(SecretKind.GENERATE, result.receipt.kind)
+            assertEquals("Xk9#mP2vQ7wL", result.secret.value)
+            assertEquals(SecretState.NEW, result.secret.state)
+            assertEquals(false, result.secret.hasPassphrase)
+            assertEquals(300L, result.secret.ttlSeconds, "numeric scalars decode too")
+            assertEquals(1792596963L, result.receipt.createdAt, "fractional epoch truncates")
+            assertEquals(server.url("/secret/secgen1234567890").toString(), result.secretUrl)
+            assertFalse(result.secret.toString().contains("Xk9#mP2vQ7wL"), "toString must redact the value")
         }
 
     @Test

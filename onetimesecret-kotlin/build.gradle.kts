@@ -110,6 +110,12 @@ kotlin.sourceSets.named("main") {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    // Gradle runs tests with assertions enabled, which switches kotlinx.coroutines
+    // into debug mode and makes it wrap every exception that crosses a
+    // suspension in a copy of itself (the original becomes the cause). No
+    // consumer sees that, so turn it off and let tests assert on the real
+    // cause chain.
+    systemProperty("kotlinx.coroutines.stacktrace.recovery", "false")
     testLogging {
         events("failed", "skipped")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
