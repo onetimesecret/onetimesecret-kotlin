@@ -64,4 +64,14 @@ private fun roundTrip(
         exitProcess(1)
     }
     println("ok: receipt moved from ${before.state} to ${after.state}")
+
+    // A generated value is disclosed once, on the first receipt view, which
+    // generate performs for you. The window is short and deployment-specific,
+    // so a missing value is reported rather than treated as a failure.
+    val generated = client.secrets.generate(length = 16, ttl = 5.minutes, guest = guest)
+    println("generated secret:            ${generated.secret.identifier}")
+    val shown = generated.value ?: "(not disclosed: ${generated.claimFailure ?: "window passed"})"
+    println("generated value:             $shown")
+    client.receipts.burn(generated.receipt.identifier, guest = guest)
+    println("ok: generated secret burned")
 }
