@@ -22,25 +22,25 @@ import kotlin.time.Duration.Companion.seconds
  */
 class LiveApiTest {
     private val live = System.getenv("ONETIME_LIVE") == "1"
-    private val baseUrl = System.getenv("ONETIME_BASE_URL")
+    private val liveBaseUrl = System.getenv("ONETIME_BASE_URL")
     private val extid = System.getenv("ONETIME_CUSTOMER_EXTID")
     private val token = System.getenv("ONETIME_API_TOKEN")
 
     private fun anonymousClient(): OnetimeSecretClient {
-        assumeTrue(live && !baseUrl.isNullOrBlank(), "ONETIME_LIVE=1 and ONETIME_BASE_URL are required")
+        assumeTrue(live && !liveBaseUrl.isNullOrBlank(), "ONETIME_LIVE=1 and ONETIME_BASE_URL are required")
         return OnetimeSecretClient {
-            this.baseUrl = baseUrl
+            baseUrl = liveBaseUrl
             readTimeout = 30.seconds
         }
     }
 
     private fun authenticatedClient(): OnetimeSecretClient {
         assumeTrue(
-            live && !baseUrl.isNullOrBlank() && !extid.isNullOrBlank() && !token.isNullOrBlank(),
+            live && !liveBaseUrl.isNullOrBlank() && !extid.isNullOrBlank() && !token.isNullOrBlank(),
             "ONETIME_LIVE=1, ONETIME_BASE_URL, ONETIME_CUSTOMER_EXTID and ONETIME_API_TOKEN are required",
         )
         return OnetimeSecretClient {
-            this.baseUrl = baseUrl
+            baseUrl = liveBaseUrl
             credentials(extid!!, token!!)
             readTimeout = 30.seconds
         }
