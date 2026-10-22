@@ -66,6 +66,11 @@ class LiveApiTest {
                 val shown = client.secrets.show(created.secret.identifier, guest = true)
                 assertEquals(created.secret.identifier, shown.identifier)
 
+                // The server builds receipt links from its HOST setting; a local
+                // server whose HOST differs from ONETIME_BASE_URL fails here.
+                val receipt = client.receipts.show(created.receipt.identifier, guest = true)
+                assertEquals(created.secretUrl, receipt.shareUrl)
+
                 val status = client.secrets.status(created.secretUrl)
                 assertTrue(status.isAvailable, "status=${status.state}")
 
