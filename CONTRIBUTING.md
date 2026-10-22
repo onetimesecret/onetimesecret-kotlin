@@ -52,7 +52,10 @@ passes locally it passes there.
   with a test in `ErrorHandlingTest.kt`.
 - **Tests use MockWebServer.** Unit tests must not touch the network. Anything
   that needs a real deployment goes in `LiveApiTest`, which only runs with
-  `ONETIME_LIVE=1`.
+  `ONETIME_LIVE=1`. Against a local server, start it with `HOST` set to the
+  host and port in `ONETIME_BASE_URL` (for example `HOST=127.0.0.1:7143`):
+  the server builds the links in receipts from `HOST`, which defaults to
+  `localhost:3000`.
 - **Android compatibility.** The library targets Java 11 bytecode and avoids
   `java.time`, `java.util.Optional` and streams in its public API. Prefer
   `kotlin.time.Duration` and epoch seconds.
